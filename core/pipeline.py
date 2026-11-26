@@ -12,7 +12,17 @@ from .diagnostics import Diagnostics
 from database.repository import Repository
 
 
+class EmptyEquationError(ValueError):
+    """La ecuación está vacía: sin ella se aceptaría cualquier artículo, de cualquier tema."""
+
+
+EMPTY_EQUATION_MSG = ("Falta la ecuación de búsqueda. Escríbala en el campo \"equation\" de config.json "
+                      "o pásela con --equation (p. ej. --equation \"educ* AND ensino\").")
+
+
 def run_search(settings, am_factory=None):
+    if not (settings.equation or "").strip():
+        raise EmptyEquationError(EMPTY_EQUATION_MSG)
     started = datetime.now(timezone.utc).isoformat()
     diag = Diagnostics()
     repo = Repository(settings.db_path)

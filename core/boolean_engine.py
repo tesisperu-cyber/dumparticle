@@ -18,7 +18,8 @@ class BooleanSyntaxError(ValueError):
 @dataclass(frozen=True)
 class Term:
     tokens: tuple
-    prefix: bool = False
+    prefix: bool = False          # truncamiento en la última palabra (compatibilidad)
+    stars: tuple = ()             # truncamiento por palabra: ("conducta*" de ...) -> (True, False, ...)
 
 
 @dataclass(frozen=True)
@@ -59,10 +60,15 @@ def _lex(text: str):
             out.append(("RP", ")"))
         elif m.group("phrase") is not None:
             raw = m.group("phrase")
-            toks = tuple(tokenize(raw))
+            toks, stars = [], []
+            for w in raw.split():
+                wt = tokenize(w.rstrip("*"))
+                for k, t in enumerate(wt):
+                    toks.append(t)
+                    stars.append(w.endswith("*") and k == len(wt) - 1)
             if not toks:
                 raise BooleanSyntaxError("Frase vacía entre comillas")
-            out.append(("TERM", Term(toks, raw.rstrip().endswith("*"))))
+            out.append(("TERM", Term(tuple(toks), stars[-1], tuple(stars))))
         else:
             w = m.group("word")
             if w in _OPS:
@@ -144,11 +150,8 @@ def _term_match(term: Term, toks: list, tokset: set) -> bool:
         return ts[0] in tokset
     n = len(ts)
     for i in range(len(toks) - n + 1):
-        ok = all(toks[i + j] == ts[j] for j in range(n - 1))
-        if not ok:
-            continue
-        last = toks[i + n - 1]
-        if (last.startswith(ts[-1]) if term.prefix else last == ts[-1]):
+        stars = term.stars or (False,) * (n - 1) + (term.prefix,)
+        if all(toks[i + j].startswith(ts[j]) if stars[j] else toks[i + j] == ts[j] for j in range(n)):
             return True
     return False
 

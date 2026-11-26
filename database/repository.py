@@ -76,15 +76,22 @@ class Repository:
                FROM articles a LEFT JOIN xml_files x ON x.collection=a.collection AND x.pid=a.pid
                LEFT JOIN fulltext f ON f.collection=a.collection AND f.pid=a.pid""", self.conn)
 
-    def export(self, fmt: str, out_dir: str, name: str = "resultados") -> str:
+    def export(self, fmt: str, out_dir: str, name: str = "resultados", keys=None) -> str:
+        """keys: iterable de (colección, pid). Si se da, exporta SOLO esos (los de la búsqueda);
+        si no, exporta toda la caché local (todo lo descargado alguna vez)."""
         Path(out_dir).mkdir(parents=True, exist_ok=True)
         df = self.to_dataframe()
+        if keys is not None:
+            ks = set(keys)
+            df = df[[(c, p) in ks for c, p in zip(df["collection"], df["pid"])]]
         p = Path(out_dir) / f"{name}.{fmt}"
         if fmt == "csv":
             df.to_csv(p, index=False, encoding="utf-8-sig")
         elif fmt in ("xlsx", "excel"):
             p = p.with_suffix(".xlsx")
-            df = df.map(lambda v: v[:32000] if isinstance(v, str) else v)  # límite de celda de Excel
+            import re
+            _ilegal = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f]")  # caracteres que openpyxl rechaza
+            df = df.map(lambda v: _ilegal.sub("", v)[:32000] if isinstance(v, str) else v)
             df.to_excel(p, index=False)
         elif fmt == "json":
             df.to_json(p, orient="records", force_ascii=False, indent=2)

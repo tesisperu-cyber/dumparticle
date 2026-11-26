@@ -49,7 +49,10 @@ class Harvester:
         matches: list[ArticleRecord] = []
         for col in self.s.collections:
             t0, seen = time.time(), 0
-            for ident in self.am.iter_identifiers(col, issn=self.s.issn):
+            # ArticleMeta lista los identificadores del más antiguo al más nuevo: sin 'from' se gastan
+            # los primeros N registros en artículos de 2005-2010 y el filtro de año deja CERO resultados.
+            from_date = f"{self.s.year_from}-01-01" if self.s.year_from else None
+            for ident in self.am.iter_identifiers(col, issn=self.s.issn, from_date=from_date):
                 if len(matches) >= self.s.max_results:
                     self.diag.note(f"Se alcanzó max_results={self.s.max_results}")
                     return matches
@@ -62,6 +65,13 @@ class Harvester:
                 self.diag.identifiers_listed += 1
                 pid = ident.get("code") if isinstance(ident, dict) else None
                 if not pid:
+                    continue
+                # El PID embebe el año de publicación (S1609-9117|2006|0001|00001): descartar
+                # fuera de rango SIN pedir metadatos (evita gastar el límite en artículos viejos).
+                py = int(pid[10:14]) if len(pid) >= 14 and pid[10:14].isdigit() else None
+                if py and ((self.s.year_from and py < self.s.year_from) or
+                           (self.s.year_to and py > self.s.year_to)):
+                    self.diag.inc("skipped_by_pid_year", collection=col)
                     continue
                 seen += 1
                 rec = self.fetch_record(col, pid)

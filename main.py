@@ -62,13 +62,20 @@ def cmd_search(a, s):
         s.collections = a.collections.split(",")
     if a.max_results:
         s.max_results = a.max_results
+    if not (s.equation or "").strip():
+        from core.pipeline import EMPTY_EQUATION_MSG
+        print("ERROR:", EMPTY_EQUATION_MSG)
+        return 2
+    print("Ecuación usada:", s.equation)
+    print("Colecciones:", ",".join(s.collections), "| años:", s.year_from, "-", s.year_to)
     matches, diag, repo = run_search(s)
     print(f"{len(matches)} artículo(s) coinciden.")
     for r in matches:
         print(f"  [{r.collection}] {r.pid} ({r.year}) {r.title}")
     print(diag.format())
+    keys = [(r.collection, r.pid) for r in matches]
     for fmt in ("csv", "xlsx", "json"):
-        print("Exportado:", repo.export(fmt, s.exports_dir))
+        print("Exportado (solo coincidencias):", repo.export(fmt, s.exports_dir, keys=keys))
 
 
 def cmd_probe(a, s):

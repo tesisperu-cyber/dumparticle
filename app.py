@@ -21,7 +21,8 @@ cols_all = base.all_collections()
 
 with st.sidebar:
     st.header("Parámetros")
-    equation = st.text_area("Ecuación temática", base.equation, height=140)
+    equation = st.text_area("Ecuación temática", base.equation, height=140,
+                            placeholder='Ej.: (educ* OR ensino) AND ("inteligencia artificial" OR "inteligência artificial")')
     collections = st.multiselect("Colecciones", list(cols_all), default=base.collections,
                                  format_func=lambda c: f"{c} · {cols_all[c]}")
     c1, c2 = st.columns(2)
@@ -76,6 +77,8 @@ with tab_probe:
 with tab_search:
     if st.button("Buscar", type="primary"):
         try:
+            if not equation.strip():
+                raise BooleanSyntaxError("Escriba su ecuación en la barra lateral antes de buscar.")
             compile_query(equation)
         except BooleanSyntaxError as e:
             st.error(f"Error en la ecuación: {e}")
@@ -84,6 +87,7 @@ with tab_search:
             with st.spinner("Consultando SciELO…"):
                 matches, diag, repo = run_search(current_settings())
             st.session_state["repo"], st.session_state["diag"] = repo, diag
+            st.session_state["keys"] = [(r.collection, r.pid) for r in matches]
             st.subheader(f"{len(matches)} artículo(s) coinciden")
             if matches:
                 st.dataframe([{"colección": r.collection, "pid": r.pid, "año": r.year, "título": r.title,
@@ -94,7 +98,7 @@ with tab_search:
         st.divider()
         fmt = st.radio("Exportar", ["csv", "xlsx", "json"], horizontal=True)
         if st.button("Generar archivo"):
-            path = repo.export(fmt, current_settings().exports_dir)
+            path = repo.export(fmt, current_settings().exports_dir, keys=st.session_state.get("keys"))
             st.download_button(f"Descargar {Path(path).name}", Path(path).read_bytes(), Path(path).name)
 
 with tab_eq:

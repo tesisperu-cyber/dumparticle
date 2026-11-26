@@ -7,7 +7,7 @@ Responsable de validación humana: Pedro.
 ## Estado honesto (léase primero)
 | Componente | Estado |
 |---|---|
-| Motor booleano, normalizador, parser JATS, validador, deduplicador, SQLite, exportación, diagnóstico | **Probado** (39 pruebas offline pasan) |
+| Motor booleano, normalizador, parser JATS, validador, deduplicador, SQLite, exportación, diagnóstico | **Probado** (44 pruebas offline pasan) |
 | Cliente ArticleMeta (rutas, parser JSON `vNN`) | **Implementado, NO verificado en vivo**: el entorno cloud no resuelve `articlemeta.scielo.org` |
 | Recuperación de un artículo real (Fase 3) | **PENDIENTE**: ejecútela en su PC con `python main.py probe` |
 | Kernel / OAI-PMH | No implementado (rutas sin verificar; ver docs/LIMITACIONES.md) |
@@ -20,7 +20,7 @@ cd C:\ruta\scielo_pybot
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1        # si falla: Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
 pip install -r requirements.txt
-python -m pytest -q                  # debe dar 39 passed
+python -m pytest -q                  # debe dar 44 passed
 python main.py init-db
 python main.py probe --collection per      # PRIMERA PRUEBA con artículo real
 jupyter notebook notebooks/scielo_demo.ipynb
@@ -45,6 +45,15 @@ python main.py export --fmt xlsx
 ```
 Todos los filtros (ecuación, colecciones, años, máximos, tiempo, ISSN, tipo) están en `config.json`
 sin tocar código. Colecciones nuevas: `"extra_collections": {"mex2": "Nombre"}` y añadir el código en `collections`.
+
+## Su propia ecuación (cualquier tema)
+`config.json` se entrega **con la ecuación vacía**: cada usuario escribe la suya. Sin ecuación, `search` se detiene con un
+mensaje de error (así no descarga artículos de cualquier tema).
+1. Abra `config.json` y escriba su ecuación en `"equation"` (comillas internas escapadas: `\"`), o
+2. pásela por consola: `python main.py search --equation "(educ* OR ensino) AND ensino"`, o
+3. escríbala en la barra lateral de la interfaz Streamlit.
+Para no subir su ecuación a Git, copie `config.json` a `config.local.json` (ya está en `.gitignore`) y use
+`python main.py --config config.local.json search`.
 
 ## Sintaxis de ecuaciones
 `AND`, `OR`, `NOT` (**en MAYÚSCULAS**), paréntesis, `"frases"`, `prefijo*`. `A NOT B` = `A AND NOT B`.
