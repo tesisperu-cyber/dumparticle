@@ -1,41 +1,56 @@
-# DumpArticle · SciELO v0.3.0
+# scielo_pybot — Recuperador bibliográfico SciELO (PYBOT)
 
-Buscador temático basado en la arquitectura del cuaderno `buscador_scielo_cascada_GROBIDOKOK.ipynb`. Recupera identificadores y fichas desde SciELO ArticleMeta, aplica una ecuación booleana local sobre título, resumen y palabras clave, permite seleccionar artículos y descarga XML mediante ArticleMeta.
+Módulo nuevo, independiente y verificable: busca artículos en SciELO (ArticleMeta), filtra con una
+ecuación booleana propia, descarga XML-JATS, extrae secciones y guarda en SQLite (export CSV/Excel/JSON).
+Responsable de validación humana: Pedro.
 
-## Qué hace
-- Cosecha paginada por colección mediante `article/identifiers/`.
-- Recupera fichas individuales con `article/`.
-- Ecuaciones `AND`, `OR`, `NOT`, frases entre comillas, paréntesis y truncamiento final `*`.
-- Normaliza acentos antes de evaluar términos.
-- Filtros por año e ISSN; límite de coincidencias, registros escaneados y tiempo por colección.
-- Deduplicación por DOI o título+año+ISSN.
-- Descarga XML `xmlrsps`/`xmlwos`, ZIP y `manifest.csv`.
-- Control de cosecha por colección para transparentar límites y cobertura.
+## Estado honesto (léase primero)
+| Componente | Estado |
+|---|---|
+| Motor booleano, normalizador, parser JATS, validador, deduplicador, SQLite, exportación, diagnóstico | **Probado** (39 pruebas offline pasan) |
+| Cliente ArticleMeta (rutas, parser JSON `vNN`) | **Implementado, NO verificado en vivo**: el entorno cloud no resuelve `articlemeta.scielo.org` |
+| Recuperación de un artículo real (Fase 3) | **PENDIENTE**: ejecútela en su PC con `python main.py probe` |
+| Kernel / OAI-PMH | No implementado (rutas sin verificar; ver docs/LIMITACIONES.md) |
+Los XML de `tests/fixtures/` son **sintéticos** (solo estructura JATS), no artículos reales.
 
-## Diferencia importante
-SciELO ArticleMeta no ofrece aquí una búsqueda booleana temática remota. La aplicación recorre metadatos por colección y evalúa la ecuación localmente. Por tanto, el resultado depende de los límites configurados y del orden/cobertura del catálogo. Un resultado cero no demuestra que SciELO no tenga artículos sobre el tema.
-
-## Ejecutar localmente
-```bash
+## Instalación en Windows (PowerShell)
+```powershell
+# 1. Instale Python 3.11+ desde https://www.python.org/downloads/ (marque "Add python.exe to PATH")
+cd C:\ruta\scielo_pybot
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1        # si falla: Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
 pip install -r requirements.txt
+python -m pytest -q                  # debe dar 39 passed
+python main.py init-db
+python main.py probe --collection per      # PRIMERA PRUEBA con artículo real
+jupyter notebook notebooks/scielo_demo.ipynb
+```
+**Si `probe` da APROBADO**, ya hay metadatos, PID, DOI, XML válido y secciones reales. Se genera
+`exports/informe_primer_articulo.md` y los crudos en `exports/probe/`. **Envíeme esa carpeta/informe**
+si algún paso falla y ajusto el parser con la respuesta real.
+
+## Interfaz web (Streamlit)
+```powershell
 streamlit run app.py
 ```
+Pestañas: prueba real, búsqueda con panel de diagnóstico y exportación, probar ecuación, analizar un XML subido.
+Para Streamlit Cloud: *Main file path* = `app.py`. Ojo: no está verificado que ese servidor alcance SciELO; use la pestaña «Prueba real» para comprobarlo.
 
-## Desplegar en Streamlit Community Cloud
-1. Descomprime el ZIP.
-2. Sustituye los archivos del repositorio por el contenido del proyecto.
-3. Haz commit y push a GitHub.
-4. Streamlit Cloud reconstruirá la aplicación.
+## Uso
+```powershell
+python main.py check-equation "(educ* OR ensino) AND ""inteligencia artificial""" "La inteligencia artificial en la educación"
+python main.py parse-xml ruta\archivo.xml
+python main.py search --equation "educ*" --year-from 2020 --year-to 2026 --collections per,scl --max-results 20
+python main.py export --fmt xlsx
+```
+Todos los filtros (ecuación, colecciones, años, máximos, tiempo, ISSN, tipo) están en `config.json`
+sin tocar código. Colecciones nuevas: `"extra_collections": {"mex2": "Nombre"}` y añadir el código en `collections`.
 
-## Recomendación de primera prueba
-- Una colección (por ejemplo `scl` o `per`).
-- Máximo 100 resultados.
-- Máximo 500 registros escaneados.
-- 300–600 segundos.
-- Verifica el resumen por colección antes de ampliar el escaneo.
+## Sintaxis de ecuaciones
+`AND`, `OR`, `NOT` (**en MAYÚSCULAS**), paréntesis, `"frases"`, `prefijo*`. `A NOT B` = `A AND NOT B`.
+Precedencia NOT > AND > OR. Términos juntos sin operador dan error explícito. Tildes y mayúsculas se ignoran (ñ=n).
+Se evalúa sobre título (todos los idiomas) + resumen + palabras clave.
 
-## Limitaciones y validación
-Las pruebas incluidas verifican el parser booleano, la normalización y la paginación con respuestas simuladas. No certifican disponibilidad en tiempo real de ArticleMeta ni que todas las colecciones permitan cosecha desde Streamlit Cloud. La descarga XML se debe probar con PIDs reales después del despliegue. No incluye en esta versión el cosechador OAI-PMH alternativo, la cascada XML del sitio → HTML → PDF/GROBID ni los enriquecimientos OpenAlex/SCImago del notebook; se pueden integrar como módulos posteriores. El filtro de idioma tampoco está expuesto en esta versión.
-
-## Procedencia
-Adaptación de la lógica de recuperación temática del cuaderno del usuario. La ecuación se evalúa sobre `title`, `abstract` y `keywords` de las fichas ArticleMeta. Los campos no disponibles se conservan vacíos; no se inventan metadatos.
+## Diagnóstico
+Cada ejecución imprime el panel (solicitados, recibidos, completos/incompletos, filtros, temáticos, XML ok/inválidos,
+textos, errores HTTP, tiempo) y **explica por qué hay cero** en la fase donde ocurrió.

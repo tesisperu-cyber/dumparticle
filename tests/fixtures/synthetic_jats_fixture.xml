@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- FIXTURE SINTÉTICO: solo para probar el parser. NO es un artículo real de SciELO. -->
+<article article-type="research-article" xml:lang="es" xmlns:xlink="http://www.w3.org/1999/xlink">
+<front>
+ <journal-meta>
+  <journal-title-group><journal-title>Revista de Prueba</journal-title></journal-title-group>
+  <issn pub-type="epub">0000-0000</issn>
+ </journal-meta>
+ <article-meta>
+  <article-id pub-id-type="doi">10.0000/prueba.2024.001</article-id>
+  <article-id pub-id-type="publisher-id">S0000-00002024000100001</article-id>
+  <title-group>
+   <article-title>Inteligencia artificial en la educación superior</article-title>
+   <trans-title-group xml:lang="en"><trans-title>Artificial intelligence in higher education</trans-title></trans-title-group>
+  </title-group>
+  <contrib-group>
+   <contrib contrib-type="author"><name><surname>Quispe</surname><given-names>Ana</given-names></name><xref ref-type="aff" rid="aff1"/></contrib>
+   <contrib contrib-type="author"><name><surname>Silva</surname><given-names>João</given-names></name><xref ref-type="aff" rid="aff2"/></contrib>
+  </contrib-group>
+  <aff id="aff1"><label>1</label>Universidad Ficticia, Lima, Perú</aff>
+  <aff id="aff2"><label>2</label><institution content-type="original">Universidade Fictícia, São Paulo, Brasil</institution></aff>
+  <pub-date pub-type="epub"><year>2024</year></pub-date>
+  <abstract><p>Este estudio analiza el uso de la inteligencia artificial en la enseñanza.</p></abstract>
+  <trans-abstract xml:lang="en"><p>This study analyzes artificial intelligence in teaching.</p></trans-abstract>
+  <kwd-group xml:lang="es"><kwd>inteligencia artificial</kwd><kwd>educación</kwd></kwd-group>
+  <kwd-group xml:lang="en"><kwd>artificial intelligence</kwd><kwd>education</kwd></kwd-group>
+ </article-meta>
+</front>
+<body>
+ <sec sec-type="intro"><title>1. Introducción</title><p>Texto de introducción.</p></sec>
+ <sec sec-type="methods"><title>Materiales y métodos</title><p>Texto de métodos.</p><sec><title>Muestra</title><p>Subsección.</p></sec></sec>
+ <sec><title>Resultados</title><p>Texto de resultados.</p></sec>
+ <sec><title>Discusión</title><p>Texto de discusión.</p></sec>
+ <sec><title>Marco ético</title><p>Sección fuera del esquema estándar.</p></sec>
+ <sec><title>Conclusiones</title><p>Texto de conclusiones.</p></sec>
+</body>
+<back>
+ <ref-list>
+  <ref id="r1"><mixed-citation>Autor A. Título uno. Rev. 2020.</mixed-citation></ref>
+  <ref id="r2"><element-citation><pub-id pub-id-type="doi">10.1/abc</pub-id>Autor B. Título dos.</element-citation></ref>
+ </ref-list>
+</back>
+</article>

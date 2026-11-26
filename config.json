@@ -1,0 +1,12 @@
+{
+  "equation": "(\"inteligencia artificial\" OR \"inteligência artificial\" OR \"artificial intelligence\") AND (educ* OR ensino OR enseñanza OR teaching OR learning OR aprendizaje OR aprendizagem)",
+  "collections": ["per", "scl", "col", "chl", "mex", "arg", "cub", "ven", "ury", "cri", "bol", "spa", "prt"],
+  "year_from": 2020,
+  "year_to": 2026,
+  "max_results": 50,
+  "max_records_per_collection": 300,
+  "max_seconds_per_collection": 120,
+  "issn": null,
+  "doc_type": null,
+  "download_xml": true
+}
