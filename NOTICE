@@ -1,0 +1,7 @@
+Adaptación independiente basada en el flujo del script `processing/dumparticles.py`
+del proyecto SciELO `scieloorg/articles_meta`:
+https://github.com/scieloorg/articles_meta/blob/master/processing/dumparticles.py
+
+SciELO y sus proyectos no patrocinan ni mantienen este repositorio. El código de
+este repositorio fue reorganizado y ampliado; consulte la licencia del proyecto
+original y mantenga las atribuciones y avisos que correspondan al redistribuir.
