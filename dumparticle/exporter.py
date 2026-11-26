@@ -41,7 +41,7 @@ def dump_articles(
             xml_path = ""
 
             try:
-                xml_text = client.get_article_xml(code, xml_format=xml_format)
+                xml_text = client.get_article_xml(code, xml_format=xml_format, collection=collection)
                 collection_folder = _safe_part(collection)
                 issn_folder = _safe_part(issn)
                 filename = _safe_part(code) + ".xml"

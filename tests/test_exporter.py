@@ -3,7 +3,7 @@ from zipfile import ZipFile
 
 
 class FakeClient:
-    def get_article_xml(self, code, xml_format="xmlrsps"):
+    def get_article_xml(self, code, xml_format="xmlrsps", collection=None):
         if code == "BAD":
             raise RuntimeError("registro no disponible")
         return f"<article><code>{code}</code></article>"

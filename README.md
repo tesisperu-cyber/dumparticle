@@ -1,80 +1,41 @@
-# DumpArticle SciELO
+# DumpArticle · SciELO v0.3.0
 
-Aplicación Python para **buscar artículos científicos por tema en SciELO** y descargar sus documentos XML mediante SciELO ArticleMeta.
+Buscador temático basado en la arquitectura del cuaderno `buscador_scielo_cascada_GROBIDOKOK.ipynb`. Recupera identificadores y fichas desde SciELO ArticleMeta, aplica una ecuación booleana local sobre título, resumen y palabras clave, permite seleccionar artículos y descarga XML mediante ArticleMeta.
 
-## Flujo funcional
+## Qué hace
+- Cosecha paginada por colección mediante `article/identifiers/`.
+- Recupera fichas individuales con `article/`.
+- Ecuaciones `AND`, `OR`, `NOT`, frases entre comillas, paréntesis y truncamiento final `*`.
+- Normaliza acentos antes de evaluar términos.
+- Filtros por año e ISSN; límite de coincidencias, registros escaneados y tiempo por colección.
+- Deduplicación por DOI o título+año+ISSN.
+- Descarga XML `xmlrsps`/`xmlwos`, ZIP y `manifest.csv`.
+- Control de cosecha por colección para transparentar límites y cobertura.
 
-1. El usuario escribe un tema o expresión de búsqueda.
-2. La aplicación consulta SciELO Search (`https://search.scielo.org/`) en formato JSON.
-3. Normaliza los resultados que incluyen un PID/código de artículo y permite aplicar filtros de colección, ISSN, año e idioma.
-4. El usuario revisa los resultados y selecciona los artículos.
-5. SciELO ArticleMeta recupera el XML individual mediante `article?code=PID&format=xmlrsps|xmlwos`.
-6. La aplicación genera un ZIP con los XML y un `manifest.csv` que conserva título, autores, revista, año, DOI, PID, URL, consulta y estado de descarga.
+## Diferencia importante
+SciELO ArticleMeta no ofrece aquí una búsqueda booleana temática remota. La aplicación recorre metadatos por colección y evalúa la ecuación localmente. Por tanto, el resultado depende de los límites configurados y del orden/cobertura del catálogo. Un resultado cero no demuestra que SciELO no tenga artículos sobre el tema.
 
-**Importante:** SciELO Search y ArticleMeta son servicios distintos. Search descubre los artículos; ArticleMeta recupera sus documentos XML. Los identificadores se manejan internamente y no se solicitan al usuario.
-
-## Estado y limitación de validación
-
-El conector utiliza el endpoint web de búsqueda de SciELO con `q`, `format=json`, `count` y `lang`. La estructura JSON puede cambiar y el servicio puede limitar solicitudes automatizadas. El proyecto incluye pruebas simuladas para validar el procesamiento de respuestas, pero estas no demuestran disponibilidad en vivo. Antes de utilizarlo como recuperador de producción, se debe ejecutar una búsqueda real pequeña y verificar el JSON devuelto y la descarga de un XML.
-
-Si SciELO Search no devuelve JSON o una estructura reconocible, la aplicación informa el error. **No recurre silenciosamente a descargar identificadores generales**, porque eso no cumpliría la búsqueda temática solicitada.
-
-## Requisitos
-
-- Python 3.10 o superior.
-- Conexión a Internet.
-- Acceso HTTP(S) a `search.scielo.org` y `articlemeta.scielo.org`.
-
-## Instalación local (Windows)
-
-```powershell
-git clone https://github.com/USUARIO/dumparticle-scielo.git
-cd dumparticle-scielo
-py -3.11 -m venv .venv
-.\.venv\Scripts\Activate.ps1
-python -m pip install --upgrade pip
+## Ejecutar localmente
+```bash
 pip install -r requirements.txt
-```
-
-## Ejecutar Streamlit
-
-```powershell
 streamlit run app.py
 ```
 
-## Ejecutar pruebas
+## Desplegar en Streamlit Community Cloud
+1. Descomprime el ZIP.
+2. Sustituye los archivos del repositorio por el contenido del proyecto.
+3. Haz commit y push a GitHub.
+4. Streamlit Cloud reconstruirá la aplicación.
 
-```bash
-python -m pytest -q
-```
+## Recomendación de primera prueba
+- Una colección (por ejemplo `scl` o `per`).
+- Máximo 100 resultados.
+- Máximo 500 registros escaneados.
+- 300–600 segundos.
+- Verifica el resumen por colección antes de ampliar el escaneo.
 
-Las pruebas utilizan respuestas simuladas. No descargan datos reales.
+## Limitaciones y validación
+Las pruebas incluidas verifican el parser booleano, la normalización y la paginación con respuestas simuladas. No certifican disponibilidad en tiempo real de ArticleMeta ni que todas las colecciones permitan cosecha desde Streamlit Cloud. La descarga XML se debe probar con PIDs reales después del despliegue. No incluye en esta versión el cosechador OAI-PMH alternativo, la cascada XML del sitio → HTML → PDF/GROBID ni los enriquecimientos OpenAlex/SCImago del notebook; se pueden integrar como módulos posteriores. El filtro de idioma tampoco está expuesto en esta versión.
 
-## Servicios y rutas
-
-- SciELO Search: `https://search.scielo.org/` — descubrimiento por texto libre.
-- SciELO ArticleMeta: `https://articlemeta.scielo.org/api/v1/article` — recuperación del XML por PID/código.
-- Formatos: `xmlrsps` (SciELO Publishing Schema) y `xmlwos` (cuando estén disponibles para el registro).
-
-## Variables de entorno
-
-| Variable | Descripción | Predeterminado |
-|---|---|---|
-| `SCIELO_ARTICLEMETA_URL` | Base de ArticleMeta | `https://articlemeta.scielo.org/api/v1/` |
-| `SCIELO_SEARCH_URL` | URL de búsqueda | `https://search.scielo.org/` |
-| `SCIELO_TIMEOUT` | Timeout en segundos | `45` |
-| `SCIELO_PAGE_SIZE` | Reservado para paginación | `50` |
-
-## Uso responsable
-
-- Comenzar con muestras pequeñas.
-- Respetar las condiciones de uso y licencias de cada publicación.
-- La disponibilidad de XML y el contenido de texto completo dependen del artículo.
-- No presentar la herramienta como producto oficial de SciELO.
-
-## Referencias técnicas
-
-- [SciELO Project Documentation](https://scielo.readthedocs.io/)
-- [SciELO ArticleMeta API](https://articlemeta.scielo.org/api/v1/)
-- [SciELO Search](https://search.scielo.org/)
-- [SciELO Publishing Schema](https://docs.scielo.org/projects/scielo-publishing-schema/)
+## Procedencia
+Adaptación de la lógica de recuperación temática del cuaderno del usuario. La ecuación se evalúa sobre `title`, `abstract` y `keywords` de las fichas ArticleMeta. Los campos no disponibles se conservan vacíos; no se inventan metadatos.
