@@ -58,6 +58,14 @@ def dump_articles(
                 "collection": collection,
                 "issn": issn,
                 "code": code,
+                "title": item.get("title", ""),
+                "authors": item.get("authors", ""),
+                "journal": item.get("journal", ""),
+                "year": item.get("year", ""),
+                "doi": item.get("doi", ""),
+                "language": item.get("language", ""),
+                "source_url": item.get("url", ""),
+                "search_query": item.get("search_query", ""),
                 "xml_format": xml_format,
                 "status": status,
                 "zip_path": xml_path,
@@ -67,7 +75,9 @@ def dump_articles(
                 progress_callback(index, len(items))
 
         buffer = io.StringIO(newline="")
-        fields = ["timestamp_utc", "collection", "issn", "code", "xml_format", "status", "zip_path", "error"]
+        fields = ["timestamp_utc", "collection", "issn", "code", "title", "authors",
+                  "journal", "year", "doi", "language", "source_url", "search_query",
+                  "xml_format", "status", "zip_path", "error"]
         writer = csv.DictWriter(buffer, fieldnames=fields)
         writer.writeheader()
         writer.writerows(manifest)
